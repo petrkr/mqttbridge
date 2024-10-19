@@ -1,0 +1,22 @@
+broker_src:
+  host: "source"
+  port: 8883
+  client_id: ""
+  username: ""
+  password: ""
+  tls: true
+
+broker_dst:
+  host: "localhost"
+  port: 1883
+  client_id: "mqttbridgeDst"
+  username: ""
+  password: ""
+  tls: false
+
+mappings:
+  - src_topic: "oldtopic/something/#"
+    dst_topic: "newtopic/something/"
+
+  - src_topic: "oldtopic/something1/#"
+    dst_topic: "newtopic/something2/"
