@@ -36,6 +36,8 @@ def on_src_message(client, userdata, message):
 
 
 def connect_mqtt(broker_config):
+    host = broker_config.get('host', 'localhost')
+    port = broker_config.get('port', '1883')
     client_id = broker_config.get('client_id', 'mqttbridge')
     username = broker_config.get('username', '')
     password = broker_config.get('password', '')
@@ -49,7 +51,7 @@ def connect_mqtt(broker_config):
     if tls_enabled:
         client.tls_set_context(ssl.create_default_context())
     
-    client.connect(broker_config['host'], broker_config['port'])
+    client.connect(host, port)
 
     return client
 
