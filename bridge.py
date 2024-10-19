@@ -16,7 +16,7 @@ def map_topic(topic, mapping):
             continue
 
         dst_topic = item['dst_topic'].replace('#', '')
-        if dst_topic[-1] != "/":
+        if dst_topic[-1] != "/" and item['src_topic'][-1] == '#':
             dst_topic += "/"
 
         new_topic = topic.replace(src_topic, dst_topic)
