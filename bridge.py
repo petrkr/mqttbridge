@@ -2,10 +2,13 @@ import paho.mqtt.client as mqtt
 import yaml
 import ssl
 import logging
+import threading
 
 version = "0.0.1"
 
 logger = logging.getLogger("bridge")
+
+stop_event = threading.Event()
 
 def load_config(config_file):
     with open(config_file, 'r') as file:
@@ -94,8 +97,7 @@ def main(cfg_file="config/config.yaml"):
     client_dst.loop_start()
 
     try:
-        while True:
-            pass
+        stop_event.wait()
     except KeyboardInterrupt:
         logger.info("Exiting...")
 
@@ -104,6 +106,8 @@ def main(cfg_file="config/config.yaml"):
 
         logger.info("Stopping destination client loop")
         client_dst.loop_stop()
+
+        stop_event.set()
 
 
 if __name__ == "__main__":
