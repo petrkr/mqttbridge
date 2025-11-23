@@ -1,3 +1,5 @@
+log_level: INFO  # DEBUG, INFO, WARNING, ERROR
+
 broker_src:
   host: "source"
   port: 8883

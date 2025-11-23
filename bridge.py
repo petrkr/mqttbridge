@@ -126,9 +126,14 @@ def connect_mqtt(broker_config):
 
 def main(cfg_file="config/config.yaml"):
 
-    logger.info(f"Starting MQTT Bridge v{version}")
-    logger.info(f"Loading config file {cfg_file}")
     config = load_config(cfg_file)
+
+    # Set log level from config
+    log_level = config.get('log_level', 'INFO').upper()
+    logging.getLogger().setLevel(getattr(logging, log_level, logging.INFO))
+
+    logger.info(f"Starting MQTT Bridge v{version}")
+    logger.info(f"Log level: {log_level}")
 
     client_src = connect_mqtt(config['broker_src'])
     client_dst = connect_mqtt(config['broker_dst'])
