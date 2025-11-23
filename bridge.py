@@ -32,14 +32,71 @@ def map_topic(topic, mapping):
     return None
 
 
+def on_src_connect(client, userdata, flags, rc):
+    """Callback when source client connects - subscribe to topics here to ensure resubscription on reconnect."""
+    if rc == 0:
+        logger.info("Source MQTT connected successfully")
+        # Subscribe to topics on every connect/reconnect
+        for mapping in userdata['mappings']:
+            src_topic = mapping['src_topic']
+            if "+" in src_topic:
+                logger.warning(f"Plus wildcards not supported yet, skipping {src_topic}")
+                continue
+            logger.debug(f"Subscribing to topic {src_topic}")
+            client.subscribe(src_topic)
+    else:
+        logger.error(f"Source MQTT connection failed with code {rc}")
+
+
+def on_src_disconnect(client, userdata, rc):
+    """Callback when source client disconnects."""
+    if rc == 0:
+        logger.info("Source MQTT disconnected cleanly")
+    else:
+        logger.warning(f"Source MQTT disconnected unexpectedly (code {rc}), will attempt reconnect...")
+
+
+def on_dst_connect(client, userdata, flags, rc):
+    """Callback when destination client connects."""
+    if rc == 0:
+        logger.info("Destination MQTT connected successfully")
+    else:
+        logger.error(f"Destination MQTT connection failed with code {rc}")
+
+
+def on_dst_disconnect(client, userdata, rc):
+    """Callback when destination client disconnects."""
+    if rc == 0:
+        logger.info("Destination MQTT disconnected cleanly")
+    else:
+        logger.warning(f"Destination MQTT disconnected unexpectedly (code {rc}), will attempt reconnect...")
+
+
+def on_mqtt_log(client, userdata, level, buf):
+    """Log MQTT library messages for debugging."""
+    if level == mqtt.MQTT_LOG_ERR:
+        logger.error(f"MQTT: {buf}")
+    elif level == mqtt.MQTT_LOG_WARNING:
+        logger.warning(f"MQTT: {buf}")
+    elif level == mqtt.MQTT_LOG_DEBUG:
+        logger.debug(f"MQTT: {buf}")
+
+
 def on_src_message(client, userdata, message):
     topic = message.topic
-    payload = message.payload.decode('utf-8')
+    try:
+        payload = message.payload.decode('utf-8')
+    except UnicodeDecodeError:
+        logger.warning(f"Failed to decode payload as UTF-8 for topic {topic}, using raw bytes")
+        payload = message.payload
 
     new_topic = map_topic(topic, userdata['mappings'])
 
     if new_topic:
-        userdata['client_dst'].publish(new_topic, payload)
+        client_dst = userdata['client_dst']
+        result = client_dst.publish(new_topic, payload)
+        if result.rc != mqtt.MQTT_ERR_SUCCESS:
+            logger.error(f"Failed to publish to {new_topic}: {mqtt.error_string(result.rc)}")
 
 
 def connect_mqtt(broker_config):
@@ -78,17 +135,19 @@ def main(cfg_file="config/config.yaml"):
     # Add dest broker object, so later on source can use it on_message callback
     client_src.user_data_set({'client_dst': client_dst, 'mappings': config['mappings']})
 
+    # Set up source client callbacks
+    client_src.on_connect = on_src_connect
+    client_src.on_disconnect = on_src_disconnect
     client_src.on_message = on_src_message
+    client_src.on_log = on_mqtt_log
 
-    logger.info("Subscribe source mqtt topics")
-    for src_topic in [mapping["src_topic"] for mapping in config['mappings']]:
-        if "+" in src_topic:
-            logger.warn(f"Plus wildcards not supported yet, skipping {src_topic}")
-            continue
+    # Set up destination client callbacks
+    client_dst.on_connect = on_dst_connect
+    client_dst.on_disconnect = on_dst_disconnect
+    client_dst.on_log = on_mqtt_log
 
-        logger.debug(f"Adding topic {src_topic}")
-        client_src.subscribe(src_topic)
-
+    # Note: Subscriptions are now done in on_src_connect callback
+    # This ensures they are renewed on every reconnect
 
     logger.info("Starting source client loop")
     client_src.loop_start()
