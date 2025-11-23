@@ -3,6 +3,7 @@ import yaml
 import ssl
 import logging
 import threading
+import signal
 
 version = "0.1.0"
 
@@ -155,18 +156,22 @@ def main(cfg_file="config/config.yaml"):
     logger.info("Starting destination client loop")
     client_dst.loop_start()
 
-    try:
-        stop_event.wait()
-    except KeyboardInterrupt:
-        logger.info("Exiting...")
-
-        logger.info("Stopping source client loop")
-        client_src.loop_stop()
-
-        logger.info("Stopping destination client loop")
-        client_dst.loop_stop()
-
+    def shutdown(signum, frame):
+        logger.info(f"Received signal {signum}, shutting down...")
         stop_event.set()
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    stop_event.wait()
+
+    logger.info("Stopping source client loop")
+    client_src.loop_stop()
+
+    logger.info("Stopping destination client loop")
+    client_dst.loop_stop()
+
+    logger.info("Shutdown complete")
 
 
 if __name__ == "__main__":
