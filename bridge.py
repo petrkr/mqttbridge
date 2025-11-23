@@ -32,9 +32,9 @@ def map_topic(topic, mapping):
     return None
 
 
-def on_src_connect(client, userdata, flags, rc):
+def on_src_connect(client, userdata, flags, reason_code, properties):
     """Callback when source client connects - subscribe to topics here to ensure resubscription on reconnect."""
-    if rc == 0:
+    if reason_code == 0:
         logger.info("Source MQTT connected successfully")
         # Subscribe to topics on every connect/reconnect
         for mapping in userdata['mappings']:
@@ -45,31 +45,31 @@ def on_src_connect(client, userdata, flags, rc):
             logger.debug(f"Subscribing to topic {src_topic}")
             client.subscribe(src_topic)
     else:
-        logger.error(f"Source MQTT connection failed with code {rc}")
+        logger.error(f"Source MQTT connection failed: {reason_code}")
 
 
-def on_src_disconnect(client, userdata, rc):
+def on_src_disconnect(client, userdata, disconnect_flags, reason_code, properties):
     """Callback when source client disconnects."""
-    if rc == 0:
+    if reason_code == 0:
         logger.info("Source MQTT disconnected cleanly")
     else:
-        logger.warning(f"Source MQTT disconnected unexpectedly (code {rc}), will attempt reconnect...")
+        logger.warning(f"Source MQTT disconnected unexpectedly ({reason_code}), will attempt reconnect...")
 
 
-def on_dst_connect(client, userdata, flags, rc):
+def on_dst_connect(client, userdata, flags, reason_code, properties):
     """Callback when destination client connects."""
-    if rc == 0:
+    if reason_code == 0:
         logger.info("Destination MQTT connected successfully")
     else:
-        logger.error(f"Destination MQTT connection failed with code {rc}")
+        logger.error(f"Destination MQTT connection failed: {reason_code}")
 
 
-def on_dst_disconnect(client, userdata, rc):
+def on_dst_disconnect(client, userdata, disconnect_flags, reason_code, properties):
     """Callback when destination client disconnects."""
-    if rc == 0:
+    if reason_code == 0:
         logger.info("Destination MQTT disconnected cleanly")
     else:
-        logger.warning(f"Destination MQTT disconnected unexpectedly (code {rc}), will attempt reconnect...")
+        logger.warning(f"Destination MQTT disconnected unexpectedly ({reason_code}), will attempt reconnect...")
 
 
 def on_mqtt_log(client, userdata, level, buf):
@@ -101,13 +101,13 @@ def on_src_message(client, userdata, message):
 
 def connect_mqtt(broker_config):
     host = broker_config.get('host', 'localhost')
-    port = broker_config.get('port', '1883')
+    port = broker_config.get('port', 1883)
     client_id = broker_config.get('client_id', 'mqttbridge')
     username = broker_config.get('username', '')
     password = broker_config.get('password', '')
     tls_enabled = broker_config.get('tls', False)
 
-    client = mqtt.Client(client_id)
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
 
     if username and password:
         logger.debug(f"Setting up user/pass for {host}")
