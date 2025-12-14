@@ -1,0 +1,7 @@
+build_from:
+  aarch64: "ghcr.io/home-assistant/aarch64-base-python:3.13-alpine3.20"
+labels:
+  org.opencontainers.image.title: "MQTT Bridge"
+  org.opencontainers.image.description: "Bridge between two MQTT brokers with topic mapping"
+  org.opencontainers.image.source: "https://github.com/petrkr/mqttbridge"
+  org.opencontainers.image.licenses: "MIT"

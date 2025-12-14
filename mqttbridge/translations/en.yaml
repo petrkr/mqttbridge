@@ -1,0 +1,61 @@
+configuration:
+  log_level:
+    name: Log Level
+    description: Set the logging verbosity level for the addon
+  broker_src:
+    name: Source Broker
+    description: MQTT broker configuration to subscribe to (where messages originate)
+  broker_dst:
+    name: Destination Broker
+    description: MQTT broker configuration to publish to (where messages are sent)
+  mappings:
+    name: Topic Mappings
+    description: Define topic patterns to subscribe to and their destination transformations
+
+  # Source broker fields
+  broker_src.host:
+    name: Source Host
+    description: Hostname or IP address of the source MQTT broker
+  broker_src.port:
+    name: Source Port
+    description: Port number of the source MQTT broker (default 1883 or 8883 for TLS)
+  broker_src.client_id:
+    name: Source Client ID
+    description: MQTT client ID for source connection (leave empty for auto-generated)
+  broker_src.username:
+    name: Source Username
+    description: Username for source broker authentication (leave empty if not required)
+  broker_src.password:
+    name: Source Password
+    description: Password for source broker authentication (leave empty if not required)
+  broker_src.tls:
+    name: Source TLS/SSL
+    description: Enable TLS/SSL encryption for source broker connection
+
+  # Destination broker fields
+  broker_dst.host:
+    name: Destination Host
+    description: Hostname or IP address of the destination MQTT broker (use 'core-mosquitto' for HA addon)
+  broker_dst.port:
+    name: Destination Port
+    description: Port number of the destination MQTT broker (default 1883)
+  broker_dst.client_id:
+    name: Destination Client ID
+    description: MQTT client ID for destination connection (leave empty for auto-generated)
+  broker_dst.username:
+    name: Destination Username
+    description: Username for destination broker authentication (leave empty if not required)
+  broker_dst.password:
+    name: Destination Password
+    description: Password for destination broker authentication (leave empty if not required)
+  broker_dst.tls:
+    name: Destination TLS/SSL
+    description: Enable TLS/SSL encryption for destination broker connection
+
+  # Mapping fields
+  mappings.src_topic:
+    name: Source Topic
+    description: Topic pattern to subscribe to on source broker (supports # wildcard)
+  mappings.dst_topic:
+    name: Destination Topic
+    description: Topic prefix to use when publishing to destination broker
