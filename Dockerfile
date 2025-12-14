@@ -9,7 +9,7 @@ RUN pip install --upgrade --root-user-action=ignore pip && \
     pip install --root-user-action=ignore -r requirements.txt && \
     mkdir config
 
-COPY mqttbridge/run.sh /
+COPY run.sh /
 RUN chmod a+x /run.sh
 
 CMD ["/run.sh"]
