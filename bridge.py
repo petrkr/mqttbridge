@@ -4,6 +4,8 @@ import ssl
 import logging
 import threading
 import signal
+import socket
+import sys
 
 version = "0.1.0"
 
@@ -117,9 +119,28 @@ def connect_mqtt(broker_config):
     if tls_enabled:
         logger.debug(f"Activating TLS for {host}")
         client.tls_set_context(ssl.create_default_context())
-    
+
     logger.info(f"Connecting to {host}:{port} with clientId: {client_id}")
-    client.connect(host, port)
+
+    try:
+        client.connect(host, port)
+    except socket.gaierror as e:
+        logger.error(f"Failed to resolve hostname '{host}': {e}")
+        logger.error(f"Please check that the hostname is correct in your configuration")
+        raise SystemExit(1)
+    except OSError as e:
+        if e.errno == 113:  # Host is unreachable
+            logger.error(f"Host '{host}' is unreachable: {e}")
+            logger.error(f"Please check network connectivity and firewall settings")
+        elif e.errno == 111:  # Connection refused
+            logger.error(f"Connection refused to {host}:{port}: {e}")
+            logger.error(f"Please check that the MQTT broker is running and the port is correct")
+        else:
+            logger.error(f"Network error connecting to {host}:{port}: {e}")
+        raise SystemExit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error connecting to {host}:{port}: {e}")
+        raise SystemExit(1)
 
     return client
 
