@@ -7,7 +7,7 @@ import signal
 import socket
 import sys
 
-version = "0.1.0"
+version = "0.1.1"
 
 logger = logging.getLogger("bridge")
 
